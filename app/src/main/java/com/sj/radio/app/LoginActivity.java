@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.xmlpull.v1.XmlPullParserException;
+
 
 /**
  * A login screen that offers login via email/password and via Google+ sign in.
@@ -179,7 +181,19 @@ public class LoginActivity extends Activity implements GETClient.GETListener{
     @Override
     public void onRemoteCallComplete(String json) {
         showProgress(false);
-        Toast.makeText(this, json, Toast.LENGTH_LONG).show();
+        try {
+            XMLParser parser = new XMLParser(json);
+            String code = parser.getValue("code");
+            if(code.equals("0")){
+                String token = parser.getValue("token");
+                Toast.makeText(this, token, Toast.LENGTH_LONG).show();
+            }
+            else {
+                String message = parser.getValue("message");
+            }
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        }
     }
 }
 
