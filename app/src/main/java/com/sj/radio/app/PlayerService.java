@@ -7,8 +7,6 @@ import android.os.IBinder;
 
 import com.sj.radio.app.utils.KeyMap;
 
-import java.io.IOException;
-
 public class PlayerService extends Service {
 
     private MediaPlayer player;
@@ -31,13 +29,13 @@ public class PlayerService extends Service {
         super.onCreate();
 
         android.os.Debug.waitForDebugger();
-        try {
-            player = new MediaPlayer();
-            player.setDataSource(url);
-            player.prepare();
-            player.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            player = new MediaPlayer();
+//            player.setDataSource(url);
+//            player.prepare();
+//            player.start();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
