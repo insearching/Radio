@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -17,6 +18,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.sj.radio.app.entity.AuthResponse;
+import com.sj.radio.app.utils.GETClient;
+import com.sj.radio.app.utils.XMLParser;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 
@@ -28,21 +33,10 @@ import org.xmlpull.v1.XmlPullParserException;
  * https://developers.google.com/+/mobile/android/getting-started#step_1_enable_the_google_api
  * and follow the steps in "Step 1" to create an OAuth 2.0 client for your package.
  */
-public class LoginActivity extends Activity implements GETClient.GETListener{
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
+public class LoginActivity extends Activity implements GETClient.GETListener {
 
     // UI references.
-    private AutoCompleteTextView mEmailView;
+    private AutoCompleteTextView mUserView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -53,7 +47,7 @@ public class LoginActivity extends Activity implements GETClient.GETListener{
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mUserView = (AutoCompleteTextView) findViewById(R.id.user);
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -75,71 +69,43 @@ public class LoginActivity extends Activity implements GETClient.GETListener{
             }
         });
 
-        mLoginFormView = findViewById(R.id.login_form);
+        mLoginFormView = findViewById(R.id.email_login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
 
 
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
     public void attemptLogin() {
 
         // Reset errors.
-        mEmailView.setError(null);
+        mUserView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        String user = mUserView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
 
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
+        if (TextUtils.isEmpty(user)) {
+            mUserView.setError(getString(R.string.error_field_required));
+            focusView = mUserView;
             cancel = true;
         }
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isPasswordValid(password)) {
+        if (TextUtils.isEmpty(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
             focusView.requestFocus();
         } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
             showProgress(true);
             GETClient client = new GETClient(this);
-            client.execute("http://android-course.comli.com/login.php?username="+email+"&password="+password);
-
+            client.execute("http://android-course.comli.com/login.php?username=" + user + "&password=" + password);
         }
-    }
-    private boolean isEmailValid(String email) {
-        return email.equals(getString(R.string.username));
-    }
-
-    private boolean isPasswordValid(String password) {
-        return password.equals(getString(R.string.username));
     }
 
     /**
@@ -147,9 +113,6 @@ public class LoginActivity extends Activity implements GETClient.GETListener{
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     public void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
@@ -171,25 +134,23 @@ public class LoginActivity extends Activity implements GETClient.GETListener{
                 }
             });
         } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 
     @Override
-    public void onRemoteCallComplete(String json) {
+    public void onRemoteCallComplete(String xml) {
         showProgress(false);
         try {
-            XMLParser parser = new XMLParser(json);
-            String code = parser.getValue("code");
-            if(code.equals("0")){
-                String token = parser.getValue("token");
-                Toast.makeText(this, token, Toast.LENGTH_LONG).show();
-            }
-            else {
-                String message = parser.getValue("message");
+            XMLParser parser = new XMLParser(xml);
+            AuthResponse response = parser.getAuthRespnose();
+            if (response.getCode() == 0) {
+                Intent intent = new Intent(this, RadioActivity.class);
+                intent.putExtra("token", response.getToken());
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, response.getMessage(), Toast.LENGTH_LONG).show();
             }
         } catch (XmlPullParserException e) {
             e.printStackTrace();

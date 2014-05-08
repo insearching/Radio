@@ -1,4 +1,4 @@
-package com.sj.radio.app;
+package com.sj.radio.app.utils;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -13,26 +13,9 @@ import org.apache.http.util.EntityUtils;
 public class GETClient extends AsyncTask<String, Void, String> {
 
 	private GETListener listener;
-	private GETListenerMethod methodListner;
-	private String method = null;
-	
-	private String uui;
 
 	public GETClient (GETListener listener){
 		this.listener = listener;
-	}
-	
-	public GETClient (GETListenerMethod listener, String method){
-		this.methodListner = listener;
-		this.method = method;
-	}
-	
-	public GETClient (String str){
-		uui = str;
-	}
-	
-	public String doInBg() {
-		return doInBackground(uui);
 	}
 	
 	@Override
@@ -60,19 +43,13 @@ public class GETClient extends AsyncTask<String, Void, String> {
 		if (result == null || result.equals("")){
 			result = "null";
 		}
-		
-		if(method == null)
-			listener.onRemoteCallComplete(result);
-		else
-			methodListner.onRemoteCallComplete(result, method);
-		
+
+		listener.onRemoteCallComplete(result);
 	}
 	
 	public interface GETListener {
-		public void onRemoteCallComplete(String json);
+		public void onRemoteCallComplete(String xml);
 	}
 	
-	public interface GETListenerMethod {
-		public void onRemoteCallComplete(String json, String method);
-	}
+
 }
