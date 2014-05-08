@@ -96,9 +96,7 @@ public class RadioActivity extends Activity implements GETClient.GETListener{
             mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Intent intent = new Intent(RadioActivity.this, PlayerService.class);
-                    intent.putExtra(KeyMap.URL, radioList.get(position).getUrl());
-                    startService(intent);
+                    processStartService(""+position);
 
                     Toast.makeText(RadioActivity.this, "Now playing " + radioList.get(position).getName(), Toast.LENGTH_LONG).show();
                 }
@@ -109,6 +107,20 @@ public class RadioActivity extends Activity implements GETClient.GETListener{
         } catch (XmlPullParserException e) {
             e.printStackTrace();
         }
+    }
+
+    private void processStartService(final String url) {
+        Intent intent = new Intent(RadioActivity.this, PlayerService.class);
+        intent.putExtra(KeyMap.URL, url);
+        intent.addCategory(url);
+        startService(intent);
+    }
+
+    private void processStopService(final String url) {
+        Intent intent = new Intent(RadioActivity.this, PlayerService.class);
+        intent.putExtra(KeyMap.URL, url);
+        intent.addCategory(url);
+        stopService(intent);
     }
 
     private void showProgress(boolean flag){

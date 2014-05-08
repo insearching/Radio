@@ -7,6 +7,8 @@ import android.os.IBinder;
 
 import com.sj.radio.app.utils.KeyMap;
 
+import java.io.IOException;
+
 public class PlayerService extends Service {
 
     private MediaPlayer player;
@@ -18,24 +20,29 @@ public class PlayerService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent.getExtras().containsKey(KeyMap.URL))
-            url = intent.getExtras().getString(KeyMap.URL);
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Override
     public void onCreate() {
         super.onCreate();
 
-        android.os.Debug.waitForDebugger();
-//        try {
-//            player = new MediaPlayer();
-//            player.setDataSource(url);
-//            player.prepare();
-//            player.start();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        player = new MediaPlayer();
+
     }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent.getExtras().containsKey(KeyMap.URL))
+            url = intent.getExtras().getString(KeyMap.URL);
+
+        try {
+            player.setDataSource(url);
+            player.prepare();
+            player.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+
 }
