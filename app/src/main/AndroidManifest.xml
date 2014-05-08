@@ -26,6 +26,12 @@
             android:name="com.sj.radio.app.RadioActivity"
             android:label="@string/title_activity_radio" >
         </activity>
+
+        <service
+            android:name="com.sj.radio.app.PlayerService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
     <!-- To access Google+ APIs: -->
     <uses-permission android:name="android.permission.INTERNET" />

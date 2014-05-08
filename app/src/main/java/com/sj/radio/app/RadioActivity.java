@@ -1,6 +1,7 @@
 package com.sj.radio.app;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -95,7 +96,11 @@ public class RadioActivity extends Activity implements GETClient.GETListener{
             mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast.makeText(RadioActivity.this, "Radio, will play here" + radioList.get(position).getUrl(), Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(RadioActivity.this, PlayerService.class);
+                    intent.putExtra(KeyMap.URL, radioList.get(position).getUrl());
+                    startService(intent);
+
+                    Toast.makeText(RadioActivity.this, "Now playing " + radioList.get(position).getName(), Toast.LENGTH_LONG).show();
                 }
             });
             mListview.onRefreshComplete();
