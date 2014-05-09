@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger>
+
+    <dataSet config="main" >
+        <source path="F:\Android\Projects\Radio\PullToRefreshListView\assets" />
+    </dataSet>
+    <dataSet config="debug" >
+        <source path="F:\Android\Projects\Radio\PullToRefreshListView\build-types\debug\assets" />
+    </dataSet>
+
+</merger>
