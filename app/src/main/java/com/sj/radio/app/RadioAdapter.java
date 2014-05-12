@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.sj.radio.app.entity.Radio;
@@ -17,9 +19,19 @@ public class RadioAdapter extends BaseAdapter{
     private ArrayList<Radio> data;
     private Context context;
 
+    public enum PlaybackStatus {
+        NONE, LOADING, PLAYING
+    }
+
+    private PlaybackStatus loadArr[];
+
     public RadioAdapter(Context context, ArrayList<Radio> data){
         this.data = data;
         this.context = context;
+        loadArr = new PlaybackStatus[data.size()];
+        for(int i=0; i<loadArr.length; i++){
+            loadArr[i] = PlaybackStatus.NONE;
+        }
     }
 
     @Override
@@ -45,8 +57,12 @@ public class RadioAdapter extends BaseAdapter{
             LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.radio_list_item, null);
             holder = new ViewHolder();
+
+            holder.progressBar = (ProgressBar)convertView.findViewById(R.id.progressBar);
+            holder.playIv = (ImageView)convertView.findViewById(R.id.playIv);
             holder.nameTv = (TextView)convertView.findViewById(R.id.nameTv);
             holder.countryTv = (TextView)convertView.findViewById(R.id.countryTv);
+
             convertView.setTag(holder);
         }
         else{
@@ -54,14 +70,23 @@ public class RadioAdapter extends BaseAdapter{
 
         }
 
+        holder.playIv.setVisibility(loadArr[position] == PlaybackStatus.PLAYING ? View.VISIBLE : View.INVISIBLE);
+        holder.progressBar.setVisibility(loadArr[position] == PlaybackStatus.LOADING ? View.VISIBLE : View.INVISIBLE);
         holder.nameTv.setText(data.get(position).getName());
         holder.countryTv.setText(data.get(position).getCountry());
+
 
         return convertView;
     }
 
     class ViewHolder{
+        ProgressBar progressBar;
+        ImageView playIv;
         TextView nameTv;
         TextView countryTv;
+    }
+
+    public void setLoadingPosition(int position, PlaybackStatus status){
+        loadArr[position] = status;
     }
 }

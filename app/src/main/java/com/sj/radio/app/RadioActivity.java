@@ -35,7 +35,6 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
 
     private ProgressBar mProgressView;
     private PullToRefreshListView mListview;
-    private View currentRow;
 
     private String currentUrl = null;
     private PlayerService mService;
@@ -123,14 +122,15 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
         return true;
     }
 
+    RadioAdapter mAdapter;
     @Override
     public void onRemoteCallComplete(String xml) {
         try {
             XMLParser parser = new XMLParser(xml);
             final ArrayList<Radio> radioList = parser.getRadioList();
 
-            final RadioAdapter adapter = new RadioAdapter(this, radioList);
-            mListview.setAdapter(adapter);
+            mAdapter = new RadioAdapter(this, radioList);
+            mListview.setAdapter(mAdapter);
             mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -140,9 +140,11 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
                     // player is not running
                     if (mService == null || mService.getUrl() == null) {
                         processStartService(url);
-                        currentRow = view;
                         view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                        mAdapter.setLoadingPosition(position, RadioAdapter.PlaybackStatus.LOADING);
+                        mAdapter.notifyDataSetChanged();
                     }
+
                     // player is playing station
                     else {
                         currentUrl = mService.getUrl();
@@ -159,9 +161,7 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
                         // another station selected
                         else {
                             processStartService(url);
-                            currentRow.findViewById(R.id.playIv).setVisibility(View.INVISIBLE);
                             view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-                            currentRow = view;
                         }
                     }
                 }
@@ -175,20 +175,18 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
         }
     }
 
-
-
     class PlayerReciever extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle b = intent.getExtras();
             boolean isPlaying = b.getBoolean(KeyMap.PLAYING, false);
 
-            if (currentRow != null && isPlaying) {
-                currentRow.findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
-
-                ImageView iv = (ImageView) currentRow.findViewById(R.id.playIv);
-                iv.setImageResource(R.drawable.ic_play);
-                iv.setVisibility(View.VISIBLE);
+            if ( isPlaying) {
+                mAdapter.setLoadingPosition(position, RadioAdapter.PlaybackStatus.LOADING);
+                mAdapter.notifyDataSetChanged();
+//                ImageView iv = (ImageView) currentRow.findViewById(R.id.playIv);
+//                iv.setVisibility(View.VISIBLE);
+//                Log.d("Radio", ((TextView)currentRow.findViewById(R.id.nameTv)).getText().toString());
             }
         }
     }

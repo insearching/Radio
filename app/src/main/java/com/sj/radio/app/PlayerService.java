@@ -63,7 +63,8 @@ public class PlayerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        player.stop();
+        player.pause();
+        player.release();
     }
 
     class PlayerTask extends AsyncTask<String, Void, Void> {
