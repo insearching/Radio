@@ -1,20 +1,20 @@
 package com.sj.radio.app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
@@ -35,10 +35,11 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
 
     private ProgressBar mProgressView;
     private PullToRefreshListView mListview;
-    private boolean bound = false;
-    private String LOG_TAG = "SERVICE TAG";
-    private String currentRadio = null;
+    private View currentRow;
+
+    private String currentUrl = null;
     private PlayerService mService;
+    private PlayerReciever mReciever;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +92,12 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
     @Override
     protected void onResume() {
         super.onResume();
+        mReciever = new PlayerReciever();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(PlayerService.ACTION_PLAYER);
+        registerReceiver(mReciever, intentFilter);
+
         Intent intent = new Intent(this, PlayerService.class);
         bindService(intent, mConnection,
                 BIND_AUTO_CREATE);
@@ -98,8 +105,10 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
 
     @Override
     protected void onPause() {
-        super.onPause();
+        unregisterReceiver(mReciever);
         unbindService(mConnection);
+
+        super.onPause();
     }
 
     @Override
@@ -111,12 +120,6 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.radio, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
         return true;
     }
 
@@ -134,13 +137,33 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
                     position -= 1;
                     String url = radioList.get(position).getUrl();
 
-                    if (mService == null || mService.getUrl() == null)
+                    // player is not running
+                    if (mService == null || mService.getUrl() == null) {
                         processStartService(url);
-                    else {
-                        Toast.makeText(RadioActivity.this, "Now playing " + mService.getUrl(), Toast.LENGTH_LONG).show();
-                        mService.stopSelf();
+                        currentRow = view;
+                        view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
                     }
-                    //Toast.makeText(RadioActivity.this, "Now playing " + radioList.get(position).getName(), Toast.LENGTH_LONG).show();
+                    // player is playing station
+                    else {
+                        currentUrl = mService.getUrl();
+                        unbindService(mConnection);
+                        stopService(new Intent(RadioActivity.this, PlayerService.class));
+                        mService = null;
+
+                        // same station being selected, then stop playback
+                        if (currentUrl != null && currentUrl.equals(url)) {
+                            ImageView iv = (ImageView) view.findViewById(R.id.playIv);
+                            iv.setVisibility(View.INVISIBLE);
+                            currentUrl = null;
+                        }
+                        // another station selected
+                        else {
+                            processStartService(url);
+                            currentRow.findViewById(R.id.playIv).setVisibility(View.INVISIBLE);
+                            view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                            currentRow = view;
+                        }
+                    }
                 }
             });
 
@@ -152,50 +175,31 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
         }
     }
 
+
+
+    class PlayerReciever extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle b = intent.getExtras();
+            boolean isPlaying = b.getBoolean(KeyMap.PLAYING, false);
+
+            if (currentRow != null && isPlaying) {
+                currentRow.findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+
+                ImageView iv = (ImageView) currentRow.findViewById(R.id.playIv);
+                iv.setImageResource(R.drawable.ic_play);
+                iv.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
     private void processStartService(final String url) {
         Intent intent = new Intent(RadioActivity.this, PlayerService.class);
         intent.putExtra(KeyMap.URL, url);
         intent.addCategory(url);
+        startService(intent);
 
-        if (startService(intent) != null) {
-            Toast.makeText(getBaseContext(), "Service is already running", Toast.LENGTH_SHORT).show();
-            stopService(intent);
-        } else {
-            Toast.makeText(getBaseContext(), "There is no service running, starting service..", Toast.LENGTH_SHORT).show();
-        }
-
-        //bindService(intent, mConnection, BIND_AUTO_CREATE);
-    }
-
-    class Hold extends AsyncTask<Void, Void, Void>{
-
-        Intent i;
-        public Hold (Intent i){
-            this.i = i;
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            stopService(i);
-        }
-    }
-
-    private void processStopService(final String url) {
-        Intent intent = new Intent(RadioActivity.this, PlayerService.class);
-        intent.putExtra(KeyMap.URL, url);
-        intent.addCategory(url);
-        stopService(intent);
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
     private void showProgress(boolean flag) {

@@ -4,17 +4,50 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:background="@drawable/radio_item_bg">
+    android:background="@drawable/radio_item_bg"
+    android:padding="10dp">
 
-
-    <TextView
-        android:id="@+id/nameTv"
+    <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:visibility="invisible"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/playIv"
+        android:layout_alignBottom="@+id/progressBar"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_play"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/nameTv"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/app_name"
         android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginLeft="46dp" />
+        android:layout_toRightOf="@+id/progressBar"
+        android:layout_toLeftOf="@+id/countryTv"
+        android:layout_marginLeft="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/countryTv"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/app_name"
+        android:textStyle="italic"
+        android:textSize="14dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="20dp"
+        android:maxHeight="50dp"/>
+
+
 </RelativeLayout>

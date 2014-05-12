@@ -40,20 +40,28 @@ public class RadioAdapter extends BaseAdapter{
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        TextView nameTv;
+        ViewHolder holder;
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.radio_list_item, null);
-            nameTv = (TextView)convertView.findViewById(R.id.nameTv);
-            convertView.setTag(nameTv);
+            holder = new ViewHolder();
+            holder.nameTv = (TextView)convertView.findViewById(R.id.nameTv);
+            holder.countryTv = (TextView)convertView.findViewById(R.id.countryTv);
+            convertView.setTag(holder);
         }
         else{
-            nameTv = (TextView)convertView.getTag();
+            holder = (ViewHolder)convertView.getTag();
+
         }
 
-        nameTv.setText(data.get(position).getName());
+        holder.nameTv.setText(data.get(position).getName());
+        holder.countryTv.setText(data.get(position).getCountry());
 
         return convertView;
     }
 
+    class ViewHolder{
+        TextView nameTv;
+        TextView countryTv;
+    }
 }

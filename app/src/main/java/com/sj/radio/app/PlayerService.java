@@ -14,8 +14,10 @@ import java.io.IOException;
 public class PlayerService extends Service {
 
     private MediaPlayer player;
-    private String url = null;
+    private String mUrl = null;
     private boolean isRunning;
+    final static String ACTION_PLAYER = "action_player";
+
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -25,11 +27,7 @@ public class PlayerService extends Service {
     }
 
     public String getUrl(){
-        return url;
-    }
-
-    public void stopService(){
-        stopSelf();
+        return mUrl;
     }
 
     public class LocalBinder extends Binder {
@@ -52,14 +50,20 @@ public class PlayerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getExtras().containsKey(KeyMap.URL))
-            url = intent.getExtras().getString(KeyMap.URL);
+            mUrl = intent.getExtras().getString(KeyMap.URL);
 
         if (!isRunning) {
             isRunning = true;
             new PlayerTask().execute();
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        player.stop();
     }
 
     class PlayerTask extends AsyncTask<String, Void, Void> {
@@ -68,7 +72,7 @@ public class PlayerService extends Service {
         protected Void doInBackground(String... params) {
             try {
                 player = new MediaPlayer();
-                player.setDataSource(url);
+                player.setDataSource(mUrl);
                 player.prepare();
 
             } catch (IOException e) {
@@ -81,6 +85,11 @@ public class PlayerService extends Service {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             player.start();
+            Intent intent = new Intent();
+            intent.setAction(ACTION_PLAYER);
+
+            intent.putExtra(KeyMap.PLAYING, true);
+            sendBroadcast(intent);
         }
     }
 

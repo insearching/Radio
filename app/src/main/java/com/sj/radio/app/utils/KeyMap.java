@@ -16,4 +16,5 @@ public class KeyMap {
     public static final String NAME = "name";
     public static final String COUNTRY = "country";
     public static final String URL = "url";
+    public static final String PLAYING = "playing";
 }
