@@ -22,8 +22,8 @@ public class XMLParser {
         parser.setInput(new StringReader(xml));
     }
 
-    public AuthResponse getAuthRespnose() {
-        AuthResponse response = null;
+    public AuthResponse getAuthResponse() {
+        AuthResponse response = new AuthResponse();
         String currentTag = null;
         try {
             int eventType = parser.getEventType();
@@ -54,6 +54,8 @@ public class XMLParser {
             e.printStackTrace();
         }
 
+        if(response.getCode() == -1)
+            response = null;
         return response;
     }
 

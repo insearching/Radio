@@ -17,6 +17,7 @@ public class PlayerService extends Service {
     private String mUrl = null;
     private boolean isRunning;
     final static String ACTION_PLAYER = "action_player";
+    private PlayerTask task;
 
 
     private final IBinder mBinder = new LocalBinder();
@@ -26,7 +27,7 @@ public class PlayerService extends Service {
         return mBinder;
     }
 
-    public String getUrl(){
+    public String getUrl() {
         return mUrl;
     }
 
@@ -54,7 +55,8 @@ public class PlayerService extends Service {
 
         if (!isRunning) {
             isRunning = true;
-            new PlayerTask().execute();
+            task = new PlayerTask();
+            task.execute();
         }
 
         return START_NOT_STICKY;
@@ -63,8 +65,13 @@ public class PlayerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        player.pause();
-        player.release();
+        if (task != null)
+            task.cancel(true);
+        if (player != null) {
+            player.pause();
+            player.release();
+        }
+
     }
 
     class PlayerTask extends AsyncTask<String, Void, Void> {
@@ -85,11 +92,13 @@ public class PlayerService extends Service {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+
             player.start();
             Intent intent = new Intent();
             intent.setAction(ACTION_PLAYER);
 
             intent.putExtra(KeyMap.PLAYING, true);
+            intent.putExtra(KeyMap.URL, mUrl);
             sendBroadcast(intent);
         }
     }

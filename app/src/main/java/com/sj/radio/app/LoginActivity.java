@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.sj.radio.app.entity.AuthResponse;
 import com.sj.radio.app.utils.GETClient;
+import com.sj.radio.app.utils.KeyMap;
 import com.sj.radio.app.utils.XMLParser;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -73,27 +74,28 @@ public class LoginActivity extends Activity implements GETClient.GETListener {
         mProgressView = findViewById(R.id.login_progress);
     }
 
+    private String mUser = null;
+    private String mPassword = null;
 
     public void attemptLogin() {
-
         // Reset errors.
         mUserView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String user = mUserView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        mUser = mUserView.getText().toString();
+        mPassword = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
 
-        if (TextUtils.isEmpty(user)) {
+        if (TextUtils.isEmpty(mUser)) {
             mUserView.setError(getString(R.string.error_field_required));
             focusView = mUserView;
             cancel = true;
         }
 
-        if (TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(mPassword)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
@@ -104,7 +106,7 @@ public class LoginActivity extends Activity implements GETClient.GETListener {
         } else {
             showProgress(true);
             GETClient client = new GETClient(this);
-            client.execute("http://android-course.comli.com/login.php?username=" + user + "&password=" + password);
+            client.execute("http://android-course.comli.com/login.php?username=" + mUser + "&password=" + mPassword);
         }
     }
 
@@ -144,13 +146,18 @@ public class LoginActivity extends Activity implements GETClient.GETListener {
         showProgress(false);
         try {
             XMLParser parser = new XMLParser(xml);
-            AuthResponse response = parser.getAuthRespnose();
-            if (response.getCode() == 0) {
-                Intent intent = new Intent(this, RadioActivity.class);
-                intent.putExtra("token", response.getToken());
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, response.getMessage(), Toast.LENGTH_LONG).show();
+            AuthResponse response = parser.getAuthResponse();
+            if (response != null) {
+                if (response.getCode() == 0) {
+                    Intent intent = new Intent(this, RadioActivity.class);
+                    intent.putExtra(KeyMap.TOKEN, response.getToken());
+                    intent.putExtra(KeyMap.USER, mUser);
+                    intent.putExtra(KeyMap.PASS, mPassword);
+                    startActivity(intent);
+                }
+                if (response.getCode() == 1) {
+                    Toast.makeText(this, response.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
         } catch (XmlPullParserException e) {
             e.printStackTrace();

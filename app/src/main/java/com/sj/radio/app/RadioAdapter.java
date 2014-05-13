@@ -23,14 +23,14 @@ public class RadioAdapter extends BaseAdapter{
         NONE, LOADING, PLAYING
     }
 
-    private PlaybackStatus loadArr[];
+    private PlaybackStatus statusArr[];
 
     public RadioAdapter(Context context, ArrayList<Radio> data){
         this.data = data;
         this.context = context;
-        loadArr = new PlaybackStatus[data.size()];
-        for(int i=0; i<loadArr.length; i++){
-            loadArr[i] = PlaybackStatus.NONE;
+        statusArr = new PlaybackStatus[data.size()];
+        for(int i=0; i<statusArr.length; i++){
+            statusArr[i] = PlaybackStatus.NONE;
         }
     }
 
@@ -67,14 +67,12 @@ public class RadioAdapter extends BaseAdapter{
         }
         else{
             holder = (ViewHolder)convertView.getTag();
-
         }
 
-        holder.playIv.setVisibility(loadArr[position] == PlaybackStatus.PLAYING ? View.VISIBLE : View.INVISIBLE);
-        holder.progressBar.setVisibility(loadArr[position] == PlaybackStatus.LOADING ? View.VISIBLE : View.INVISIBLE);
+        holder.playIv.setVisibility(statusArr[position] == PlaybackStatus.PLAYING ? View.VISIBLE : View.INVISIBLE);
+        holder.progressBar.setVisibility(statusArr[position] == PlaybackStatus.LOADING ? View.VISIBLE : View.INVISIBLE);
         holder.nameTv.setText(data.get(position).getName());
         holder.countryTv.setText(data.get(position).getCountry());
-
 
         return convertView;
     }
@@ -86,7 +84,7 @@ public class RadioAdapter extends BaseAdapter{
         TextView countryTv;
     }
 
-    public void setLoadingPosition(int position, PlaybackStatus status){
-        loadArr[position] = status;
+    public void setItemStatus(int position, PlaybackStatus status){
+        statusArr[position] = status;
     }
 }

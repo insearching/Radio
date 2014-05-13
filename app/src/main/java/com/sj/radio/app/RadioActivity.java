@@ -12,12 +12,12 @@ import android.os.IBinder;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.sj.radio.app.entity.AuthResponse;
 import com.sj.radio.app.entity.Radio;
 import com.sj.radio.app.utils.GETClient;
 import com.sj.radio.app.utils.KeyMap;
@@ -123,25 +123,45 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
     }
 
     RadioAdapter mAdapter;
+
     @Override
     public void onRemoteCallComplete(String xml) {
         try {
             XMLParser parser = new XMLParser(xml);
+            AuthResponse response = parser.getAuthResponse();
+            if (response != null) {
+                if (response.getCode() == 0) {
+                    mToken = response.getToken();
+                    GETClient client = new GETClient(RadioActivity.this);
+                    client.execute(GET_RADIOS_URL + mToken);
+                }
+                else if (response.getCode() == 1) {
+                    String user = getIntent().getExtras().getString(KeyMap.USER);
+                    String pass = getIntent().getExtras().getString(KeyMap.PASS);
+
+                    GETClient client = new GETClient(this);
+                    client.execute("http://android-course.comli.com/login.php?username=" + user + "&password=" + pass);
+                }
+                return;
+            }
+
+            parser = new XMLParser(xml);
             final ArrayList<Radio> radioList = parser.getRadioList();
 
             mAdapter = new RadioAdapter(this, radioList);
             mListview.setAdapter(mAdapter);
+            restoreListView();
+
             mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     position -= 1;
-                    String url = radioList.get(position).getUrl();
+                    String url = mAdapter.getItem(position).getUrl();
 
                     // player is not running
                     if (mService == null || mService.getUrl() == null) {
                         processStartService(url);
-                        view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-                        mAdapter.setLoadingPosition(position, RadioAdapter.PlaybackStatus.LOADING);
+                        mAdapter.setItemStatus(position, RadioAdapter.PlaybackStatus.LOADING);
                         mAdapter.notifyDataSetChanged();
                     }
 
@@ -154,14 +174,21 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
 
                         // same station being selected, then stop playback
                         if (currentUrl != null && currentUrl.equals(url)) {
-                            ImageView iv = (ImageView) view.findViewById(R.id.playIv);
-                            iv.setVisibility(View.INVISIBLE);
+                            mAdapter.setItemStatus(position, RadioAdapter.PlaybackStatus.NONE);
+                            mAdapter.notifyDataSetChanged();
                             currentUrl = null;
                         }
+
                         // another station selected
                         else {
                             processStartService(url);
-                            view.findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                            int pos = findItemByUrl(currentUrl);
+
+                            if (pos != -1)
+                                mAdapter.setItemStatus(pos, RadioAdapter.PlaybackStatus.NONE);
+
+                            mAdapter.setItemStatus(position, RadioAdapter.PlaybackStatus.LOADING);
+                            mAdapter.notifyDataSetChanged();
                         }
                     }
                 }
@@ -175,18 +202,36 @@ public class RadioActivity extends Activity implements GETClient.GETListener {
         }
     }
 
+    private void restoreListView() {
+        if (mService != null && mService.getUrl() != null) {
+            int position = findItemByUrl(mService.getUrl());
+            if (position > -1) {
+                mAdapter.setItemStatus(position, RadioAdapter.PlaybackStatus.PLAYING);
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private int findItemByUrl(String url) {
+        int position = -1;
+        for (int i = 0; i < mAdapter.getCount(); i++) {
+            if (mAdapter.getItem(i).getUrl().equals(url))
+                position = i;
+        }
+        return position;
+    }
+
     class PlayerReciever extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Bundle b = intent.getExtras();
-            boolean isPlaying = b.getBoolean(KeyMap.PLAYING, false);
+            Bundle bundle = intent.getExtras();
+            boolean isPlaying = bundle.getBoolean(KeyMap.PLAYING, false);
+            String url = bundle.getString(KeyMap.URL);
 
-            if ( isPlaying) {
-                mAdapter.setLoadingPosition(position, RadioAdapter.PlaybackStatus.LOADING);
+            int position = findItemByUrl(url);
+            if (isPlaying && position != -1) {
+                mAdapter.setItemStatus(position, RadioAdapter.PlaybackStatus.PLAYING);
                 mAdapter.notifyDataSetChanged();
-//                ImageView iv = (ImageView) currentRow.findViewById(R.id.playIv);
-//                iv.setVisibility(View.VISIBLE);
-//                Log.d("Radio", ((TextView)currentRow.findViewById(R.id.nameTv)).getText().toString());
             }
         }
     }

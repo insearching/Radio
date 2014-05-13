@@ -7,7 +7,9 @@ public class AuthResponse {
     private String message;
 
     public AuthResponse() {
-
+        code = -1;
+        token = null;
+        message = null;
     }
 
     public int getCode() {

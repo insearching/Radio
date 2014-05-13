@@ -6,6 +6,8 @@ package com.sj.radio.app.utils;
 public class KeyMap {
     //Authorization
     public static final String TOKEN = "token";
+    public static final String USER = "user";
+    public static final String PASS = "pass";
     public static final String CODE = "code";
     public static final String MESSAGE = "message";
 
