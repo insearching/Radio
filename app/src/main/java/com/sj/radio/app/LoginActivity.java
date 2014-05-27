@@ -3,16 +3,15 @@ package com.sj.radio.app;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -26,18 +25,10 @@ import com.sj.radio.app.utils.XMLParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 
-/**
- * A login screen that offers login via email/password and via Google+ sign in.
- * <p/>
- * ************ IMPORTANT SETUP NOTES: ************
- * In order for Google+ sign in to work with your app, you must first go to:
- * https://developers.google.com/+/mobile/android/getting-started#step_1_enable_the_google_api
- * and follow the steps in "Step 1" to create an OAuth 2.0 client for your package.
- */
-public class LoginActivity extends Activity implements GETClient.GETListener {
+public class LoginActivity extends ActionBarActivity implements GETClient.GETListener {
 
     // UI references.
-    private AutoCompleteTextView mUserView;
+    private EditText mUserView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
@@ -48,7 +39,7 @@ public class LoginActivity extends Activity implements GETClient.GETListener {
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
-        mUserView = (AutoCompleteTextView) findViewById(R.id.user);
+        mUserView = (EditText) findViewById(R.id.user);
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="apptheme_color">#b5d400</color>
+    <color name="action_bar_text_color">#024506</color>
 </resources>

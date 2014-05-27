@@ -9,10 +9,6 @@
         android:logo="@drawable/ic_logo"
         android:theme="@style/Theme.Radio_app_style" >
 
-        <uses-sdk
-            android:minSdkVersion="8"
-            android:targetSdkVersion="19" />
-
         <activity
             android:name="com.sj.radio.app.LoginActivity"
             android:label="@string/title_activity_login"
